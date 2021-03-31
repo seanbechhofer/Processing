@@ -46,8 +46,8 @@ void setup() {
     p[i] = new Particle(i%colourCount, shapeSelect(i));
     p[i].o = random(1, random(1, width/p[i].n));
   }
-  //fullScreen(1);
-  size(1280, 720);
+  fullScreen(1);
+  //size(1280, 720);
   //size(640, 360);
   diagonal = (int)sqrt(width*width + height * height)/2;
   background(50);
