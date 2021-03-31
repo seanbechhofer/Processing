@@ -1,6 +1,6 @@
 // Based on https://openprocessing.org/sketch/492680
 
-// import the library
+// import the video capture library
 import com.hamoid.*;
 
 // create a new VideoExport-object
@@ -20,6 +20,14 @@ int[] colours = {
 
 int planetSize = 4;
 
+int PLAINCIRCLE = 0;
+int RINGEDCIRCLE = 1; 
+int SPLITCIRCLE = 2;
+int PLAINSQUARE = 3;
+int RINGEDSQUARE = 4;
+int SHAPES = 6;
+
+
 int colourCount = colours.length;
 float rotation = 0;
 float rotationSpeed = 0.002;
@@ -27,10 +35,15 @@ float rotationAcceleration = 0.000005;
 
 boolean spin = true;
 
+int shapeSelect(int i) {
+  return RINGEDCIRCLE;
+  //return i%SHAPES;
+}
+
 void setup() {
 
   for (int i = 0; i<p.length; i++) {
-    p[i] = new Particle(i%colourCount, i%2);
+    p[i] = new Particle(i%colourCount, shapeSelect(i));
     p[i].o = random(1, random(1, width/p[i].n));
   }
   //fullScreen(1);
@@ -64,15 +77,20 @@ void draw() {
   rotation+=rotationSpeed;
   rotate(rotation);
 
+  pushMatrix();
+      
   for (int i = 0; i<p.length; i++) {
     p[i].draw();
     if (p[i].drawDist()>diagonal) {
-      p[i] = new Particle(i%colourCount, i%2);
+      p[i] = new Particle(i%colourCount, shapeSelect(i));
     }
   }
   
+  popMatrix();
+  
   videoExport.saveFrame();
 }
+
 
 void keyPressed() {
   if (key == 'q') {
@@ -95,7 +113,7 @@ class Particle {
   Particle(int c_, int s_) {
     l = 1;
     colour = c_;
-    shape = 1;
+    shape = s_;
     rotation = random(0, TWO_PI);
     spin = random(-0.1,0.1);
     n = random(1, width/2);
@@ -103,6 +121,10 @@ class Particle {
     o = random(1, random(1, width/n));
   }
 
+ 
+  
+  
+  
   void draw() {
     l++;
     pushMatrix();
@@ -114,63 +136,31 @@ class Particle {
     //image(img, 0, 0);
     scale(1);
     int col = colours[colour];
-    fill(col, min(l, 255));
-    if (shape == 0) {
+    //fill(col, min(l, 255));
+    if (shape == PLAINCIRCLE) {
       // Circle, single color
-      //ellipse(0, 0, width/o/planetSize, width/o/planetSize);
-      
-      // Circle, two colours 
-      
       ellipse(0, 0, width/o/planetSize, width/o/planetSize);
-      int alt = lerpColor(col,#000000,0.5);
-      fill(alt, min(l, 255));
-      ellipse(0, 0, 0.75*width/o/planetSize, 0.75*width/o/planetSize);
-      alt = lerpColor(col,#000000,0.25);
-      fill(alt, min(l, 255));
-      ellipse(0, 0, 0.5*width/o/planetSize, 0.5*width/o/planetSize);
-      
-      // Circle, two colours, rotating. 
-      //rotate(rotation);
-      //rotation += spin;
-      
-      //arc(0, 0, width/o/planetSize, width/o/planetSize,0,PI);
-      //int opposite = lerpColor(col,#ffffff,0.5);
-      //fill(opposite, min(l, 255));
-      //arc(0, 0, width/o/planetSize, width/o/planetSize,PI,TWO_PI);
-      
-    } else {
+    } else if (shape == RINGEDCIRCLE) {  
+      // Ringed Circle
+      ringedCircle(l, o, planetSize, col);
+    } else if (shape == SPLITCIRCLE) {  
+      // Circle, two colours in halves, rotating. 
+      rotate(rotation);
+      rotation += spin;
+      splitCircle(l, o, planetSize, col);
+    } else if (shape == PLAINSQUARE) {
+     // Rotating plain square
       rotate(rotation);
       rotation += spin;
       float edge = width/o/8;
-      beginShape();      
-      vertex(edge, edge);
-      vertex(-edge, edge);
-      vertex(-edge, -edge);
-      vertex(edge, -edge);
-      endShape(CLOSE);
-      
-      int alt = lerpColor(col,#000000,0.5);
-      fill(alt, min(l, 255));
-      edge = edge * 0.75;
-      beginShape();      
-      vertex(edge, edge);
-      vertex(-edge, edge);
-      vertex(-edge, -edge);
-      vertex(edge, -edge);
-      endShape(CLOSE);
-      alt = lerpColor(col,#000000,0.25);
-      fill(alt, min(l, 255));
-      edge = edge * 0.5;
-      beginShape();      
-      vertex(edge, edge);
-      vertex(-edge, edge);
-      vertex(-edge, -edge);
-      vertex(edge, -edge);
-      endShape(CLOSE);
-      //square(0, 0, width/o/12);
-    }
-    //fill(colours[(c+2)%colourCount], min(l, 255));
-    //ellipse(0, 0, width/o/16, width/o/4);
+      plainSquare(l,edge,col);
+    } else if (shape == RINGEDSQUARE) {
+       // Rotating ringed square
+      rotate(rotation);
+      rotation += spin;
+      float edge = width/o/8;
+      ringedSquare(l, edge, col);       
+    } 
     popMatrix();
 
     o-=0.07;
