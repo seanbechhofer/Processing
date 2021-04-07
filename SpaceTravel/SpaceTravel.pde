@@ -12,10 +12,10 @@ int diagonal;
 //int[] colours = {#884400,#008844,#440088,#448800,#004488,#880044};
 int[] colours = {
   #888888 
-  ,#663300, #006633, #330066, #336600, #003366, #660033 
-//  ,#884400, #008844, #440088, #448800, #004488, #880044 
-//  ,#993300, #009933, #330099, #339900, #003399, #990033 
-//  ,#aa2200, #00aa22, #2200aa, #22aa00, #0022aa, #aa0022
+  , #663300, #006633, #330066, #336600, #003366, #660033 
+  //  ,#884400, #008844, #440088, #448800, #004488, #880044 
+  //  ,#993300, #009933, #330099, #339900, #003399, #990033 
+  //  ,#aa2200, #00aa22, #2200aa, #22aa00, #0022aa, #aa0022
 };
 
 int planetSize = 4;
@@ -25,7 +25,9 @@ int RINGEDCIRCLE = 1;
 int SPLITCIRCLE = 2;
 int PLAINSQUARE = 3;
 int RINGEDSQUARE = 4;
-int SHAPES = 6;
+int SHAPES = 5;
+int NONE = 6;
+int currentShape = NONE;
 
 
 int colourCount = colours.length;
@@ -36,9 +38,12 @@ float rotationAcceleration = 0.000005;
 boolean spin = true;
 
 int shapeSelect(int i) {
-  return RINGEDCIRCLE;
-  //return i%SHAPES;
+  if (currentShape == SHAPES) {
+    return i%SHAPES;
+  } else
+    return currentShape;
 }
+
 
 void setup() {
 
@@ -46,15 +51,15 @@ void setup() {
     p[i] = new Particle(i%colourCount, shapeSelect(i));
     p[i].o = random(1, random(1, width/p[i].n));
   }
-  fullScreen(1);
-  //size(1280, 720);
+  //fullScreen(1);
+  size(1280, 720);
   //size(640, 360);
   diagonal = (int)sqrt(width*width + height * height)/2;
   background(50);
   noStroke();
   fill(255);
   frameRate(30);
-  
+
   videoExport = new VideoExport(this, "myVideo.mp4");
   videoExport.setFrameRate(30);  
   videoExport.startMovie();
@@ -66,11 +71,11 @@ void draw() {
   }
 
   translate(width/2, height/2);
- 
+
   if (spin) {
     rotationSpeed += rotationAcceleration;
     if ((rotationSpeed > 0.005) || (rotationSpeed < -0.005)) {
-      println("Flip");
+      //println("Flip");
       rotationAcceleration = -rotationAcceleration;
     }
   }
@@ -78,16 +83,16 @@ void draw() {
   rotate(rotation);
 
   pushMatrix();
-      
+
   for (int i = 0; i<p.length; i++) {
     p[i].draw();
     if (p[i].drawDist()>diagonal) {
       p[i] = new Particle(i%colourCount, shapeSelect(i));
     }
   }
-  
+
   popMatrix();
-  
+
   videoExport.saveFrame();
 }
 
@@ -96,6 +101,20 @@ void keyPressed() {
   if (key == 'q') {
     videoExport.endMovie();
     exit();
+  } else if (key == '1') {
+    currentShape = PLAINCIRCLE;
+  } else if (key == '2') {
+    currentShape = RINGEDCIRCLE;
+  } else if (key == '3') {
+    currentShape = SPLITCIRCLE;
+  } else if (key == '4') {
+    currentShape = PLAINSQUARE;
+  } else if (key == '5') {
+    currentShape = RINGEDSQUARE;
+  } else if (key == '6') {
+    currentShape = SHAPES;  
+  } else if (key == '0') {
+    currentShape = NONE;
   }
 }  
 
@@ -115,16 +134,16 @@ class Particle {
     colour = c_;
     shape = s_;
     rotation = random(0, TWO_PI);
-    spin = random(-0.1,0.1);
+    spin = random(-0.1, 0.1);
     n = random(1, width/2);
     r = random(0, TWO_PI);
     o = random(1, random(1, width/n));
   }
 
- 
-  
-  
-  
+
+
+
+
   void draw() {
     l++;
     pushMatrix();
@@ -139,6 +158,7 @@ class Particle {
     //fill(col, min(l, 255));
     if (shape == PLAINCIRCLE) {
       // Circle, single color
+      fill(col, min(l, 255));
       ellipse(0, 0, width/o/planetSize, width/o/planetSize);
     } else if (shape == RINGEDCIRCLE) {  
       // Ringed Circle
@@ -149,18 +169,19 @@ class Particle {
       rotation += spin;
       splitCircle(l, o, planetSize, col);
     } else if (shape == PLAINSQUARE) {
-     // Rotating plain square
+      // Rotating plain square
       rotate(rotation);
       rotation += spin;
       float edge = width/o/8;
-      plainSquare(l,edge,col);
+      plainSquare(l, edge, col);
     } else if (shape == RINGEDSQUARE) {
-       // Rotating ringed square
+      // Rotating ringed square
       rotate(rotation);
       rotation += spin;
       float edge = width/o/8;
-      ringedSquare(l, edge, col);       
-    } 
+      ringedSquare(l, edge, col);
+    } else {
+    }
     popMatrix();
 
     o-=0.07;
